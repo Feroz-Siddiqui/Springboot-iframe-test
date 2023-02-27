@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+	<property scope="context" name="log.fileExtension" value="log"></property>
+	<property scope="context" name="log.directory" value="./logs"></property>
+	<property scope="context" name="log.fileName"
+		value="ferozspringworld"></property>
+	<property scope="context" name="log.dateformat"
+		value="dd-MMM-yyyy HH:mm:ss.SSS"></property>
+	<contextName>M</contextName>
+	<appender name="Console"
+		class="ch.qos.logback.core.ConsoleAppender">
+		
+		<layout class="ch.qos.logback.classic.PatternLayout">
+			<Pattern>%contextName %d{${log.dateformat}} [%thread] %-5level [%c:%L] - %msg%n</Pattern>
+		</layout>
+	</appender>
+	<appender name="RollingFile"
+		class="ch.qos.logback.core.rolling.RollingFileAppender">
+		<file>${log.directory}/${log.fileName}.${log.fileExtension}</file>
+		<encoder
+			class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+			<Pattern>%d %p [%c:%L] [%t] %m%n</Pattern>
+		</encoder>
+
+		<rollingPolicy
+			class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+			<!-- rollover daily and when the file reaches 10 MegaBytes -->
+			<fileNamePattern>${log.directory}/archived/${log.fileName}-%d{yyyy-MM-dd}.%i.${log.fileExtension}
+			</fileNamePattern>
+			<timeBasedFileNamingAndTriggeringPolicy
+				class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+				<maxFileSize>10MB</maxFileSize>
+
+			</timeBasedFileNamingAndTriggeringPolicy>
+			<!-- keep 10 days worth of history -->
+			<maxHistory>1</maxHistory>
+			<totalSizeCap>1GB</totalSizeCap>
+
+		</rollingPolicy>
+	</appender>
+
+	<springProfile name="dev">
+		<root level="info">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="feroz.spring_phase_1" level="trace"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+
+	<springProfile name="prod">
+		<root level="ERROR">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</root>
+		<logger name="feroz.spring_phase_1" level="trace"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="org.springframework.jdbc" level="all"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="org.springframework.JdbcTemplate" level="all"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger name="org.hibernate" level="all"
+			additivity="false">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		<logger
+			name="org.springframework.data.elasticsearch.client.WIRE"
+			level="trace">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+		 <logger name="org.springframework.security" level="trace">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>  
+		<logger name="org.jobrunr" level="trace">
+			<appender-ref ref="RollingFile" />
+			<appender-ref ref="Console" />
+		</logger>
+	</springProfile>
+</configuration>

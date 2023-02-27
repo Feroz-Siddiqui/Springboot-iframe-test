@@ -1,0 +1,102 @@
+class BufferProcessor extends AudioWorkletProcessor {
+
+	bufferSize = 256
+	_bytesWritten = 0
+	// 2. Create a buffer of fixed size
+	_buffer = new Float32Array(this.bufferSize)
+
+
+	initBuffer() {
+		this._bytesWritten = 0
+	}
+
+	isBufferEmpty() {
+		return this._bytesWritten === 0
+	}
+
+	isBufferFull() {
+		return this._bytesWritten === this.bufferSize
+	}
+
+	process(inputs) {
+
+		const input = inputs[0];
+
+		this.append(inputs[0][0])
+
+		return true;
+	}
+
+
+	append(channelData) {
+		if (this.isBufferFull()) {
+			this.flush()
+		}
+		if (!channelData) return
+		for (let i = 0; i < channelData.length; i++) {
+			this._buffer[this._bytesWritten++] = channelData[i]
+		}
+	}
+
+
+	flush() {
+		// trim the buffer if ended prematurely
+		/*  this.port.postMessage(  this._bytesWritten < this.bufferSize
+			   ? this._buffer.slice(0, this._bytesWritten)
+			   : this._buffer)*/
+		const MAX_INT = Math.pow(2, 16 - 1) - 1;
+		if (this._bytesWritten < this.bufferSize) {
+
+			var intarray = Int16Array.from(this._buffer.slice(0, this._bytesWritten).map(function(n) { return n * MAX_INT; }));
+			var uintarray = new Uint8Array(intarray.buffer);
+			this.port.postMessage(uintarray)
+		} else {
+
+			var intarray = Int16Array.from(this._buffer.map(function(n) { return n * MAX_INT; }));
+			var uintarray = new Uint8Array(intarray.buffer);
+			this.port.postMessage(uintarray)
+		}
+
+		this.initBuffer()
+	}
+
+	static get parameterDescriptors() {
+		return [{
+			name: 'Buffer Detector',
+		}]
+	}
+
+	constructor() {
+		super();
+		this._socket = null;
+		this._isRecording = true;
+		this.initBuffer()
+
+	}
+
+	get socket() {
+		return this._socket;
+	}
+
+	set socket(value) {
+		if (value instanceof WebSocket) {
+			this._socket = value;
+		}
+	}
+
+	get recording() {
+		return this._isRecording;
+	}
+
+	set recording(value) {
+		if ('boolean' === typeof value) {
+			this._isRecording = value;
+		}
+	}
+
+
+}
+
+
+
+registerProcessor('bufferdetector', BufferProcessor);
